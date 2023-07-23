@@ -1,16 +1,16 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { PrismaService } from 'src/prisma.service';
 import { hash } from 'bcryptjs';
+import { UsersRepository } from 'src/shared/database/repositories/users.repositories';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prismaService: PrismaService) { }
+  constructor(private readonly usersRepo: UsersRepository) {}
 
   async create(createUserDto: CreateUserDto) {
-    const { name, email, password } = createUserDto
+    const { name, email, password } = createUserDto;
 
-    const emailTaken = await this.prismaService.user.findUnique({
+    const emailTaken = await this.usersRepo.findUnique({
       where: { email },
       select: { id: true },
     });
@@ -21,7 +21,7 @@ export class UsersService {
       throw new ConflictException('this e-mail is already in use.');
     }
 
-    const user = await this.prismaService.user.create({
+    const user = await this.usersRepo.create({
       data: {
         name,
         email,
@@ -41,14 +41,14 @@ export class UsersService {
               { name: 'Transporte', icon: 'transport', type: 'EXPENSE' },
               { name: 'Viagem', icon: 'travel', type: 'EXPENSE' },
               { name: 'Outro', icon: 'other', type: 'EXPENSE' },
-            ]
-          }
-        }
-      }
-    })
+            ],
+          },
+        },
+      },
+    });
     return {
       name: user.name,
-      email: user.email
+      email: user.email,
     };
   }
 }
